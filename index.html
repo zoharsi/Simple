@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>מחשבון</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    --page: #EAEAE6;
+    --body: #D6D6D0;
+    --body-edge: #C4C4BD;
+    --lcd: #C3CAAE;
+    --lcd-ink: #22261A;
+    --lcd-dim: #5C6449;
+    --key: #F7F7F3;
+    --key-ink: #24251F;
+    --op: #8F918A;
+    --op-ink: #FFFFFF;
+    --eq: #EFB227;
+    --eq-ink: #24251F;
+    --ink: #2A2B26;
+    --muted: #6E7068;
+    --paper: #FBFBF7;
+    --paper-line: #E3E3DC;
+    --focus: #2F6FD6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --page: #1B1C19;
+      --body: #2D2E2A;
+      --body-edge: #3A3B36;
+      --lcd: #13150E;
+      --lcd-ink: #C9D69A;
+      --lcd-dim: #7D8763;
+      --key: #1E1F1C;
+      --key-ink: #ECEAE3;
+      --op: #63655D;
+      --op-ink: #FFFFFF;
+      --eq: #EFB227;
+      --eq-ink: #1E1F1C;
+      --ink: #E6E5DF;
+      --muted: #9C9D95;
+      --paper: #262724;
+      --paper-line: #34352F;
+      --focus: #8DB4FF;
+    }
+  }
+  :root[data-theme="dark"] {
+    --page: #1B1C19;
+    --body: #2D2E2A;
+    --body-edge: #3A3B36;
+    --lcd: #13150E;
+    --lcd-ink: #C9D69A;
+    --lcd-dim: #7D8763;
+    --key: #1E1F1C;
+    --key-ink: #ECEAE3;
+    --op: #63655D;
+    --op-ink: #FFFFFF;
+    --eq: #EFB227;
+    --eq-ink: #1E1F1C;
+    --ink: #E6E5DF;
+    --muted: #9C9D95;
+    --paper: #262724;
+    --paper-line: #34352F;
+    --focus: #8DB4FF;
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    margin: 0;
+    min-height: 100%;
+    background: var(--page);
+    color: var(--ink);
+    font-family: "Rubik", "Arial Hebrew", "Segoe UI", system-ui, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+  .wrap {
+    display: flex;
+    gap: 28px;
+    align-items: stretch;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    max-width: 760px;
+  }
+
+  /* Calculator body */
+  .calc {
+    width: 100%;
+    max-width: 348px;
+    background: var(--body);
+    border-radius: 28px;
+    padding: 22px 20px 24px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.25),
+      0 0 0 1px var(--body-edge),
+      0 18px 40px -18px rgba(0,0,0,.45);
+  }
+  .lcd {
+    direction: ltr;
+    background: var(--lcd);
+    color: var(--lcd-ink);
+    border-radius: 10px;
+    padding: 14px 16px 12px;
+    min-height: 108px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-end;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,.28);
+    margin-bottom: 22px;
+    overflow: hidden;
+  }
+  .expr {
+    font-size: 15px;
+    color: var(--lcd-dim);
+    min-height: 20px;
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-variant-numeric: tabular-nums;
+  }
+  .expr.err { direction: rtl; }
+  .value {
+    font-size: 48px;
+    font-weight: 300;
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    transition: font-size .12s ease;
+  }
+
+  .keys {
+    direction: ltr;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  .keys button {
+    aspect-ratio: 1;
+    border: 0;
+    border-radius: 50%;
+    font: inherit;
+    font-size: 24px;
+    font-weight: 400;
+    cursor: pointer;
+    background: var(--key);
+    color: var(--key-ink);
+    box-shadow: 0 2px 0 rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.08);
+    transition: transform .06s ease, filter .1s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .keys button.op { background: var(--op); color: var(--op-ink); font-size: 26px; }
+  .keys button.fn { background: var(--op); color: var(--op-ink); font-size: 19px; font-weight: 500; }
+  .keys button.eq { background: var(--eq); color: var(--eq-ink); font-size: 28px; font-weight: 500; }
+  .keys button.op.active { outline: 3px solid var(--eq); outline-offset: -3px; }
+  .keys button:active, .keys button.pressed { transform: translateY(2px); box-shadow: 0 0 0 rgba(0,0,0,0); filter: brightness(.94); }
+  .keys button:focus-visible, .tape button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  /* Tape */
+  .tape {
+    width: 100%;
+    max-width: 300px;
+    display: flex;
+    flex-direction: column;
+    background: var(--paper);
+    border-radius: 6px 6px 0 0;
+    box-shadow: 0 0 0 1px var(--paper-line);
+    min-height: 200px;
+    max-height: 560px;
+  }
+  .tape header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px 10px;
+    border-bottom: 1px dashed var(--paper-line);
+  }
+  .tape h2 { margin: 0; font-size: 16px; font-weight: 500; }
+  .tape header button {
+    border: 0;
+    background: none;
+    color: var(--muted);
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 6px;
+  }
+  .tape header button:hover { color: var(--ink); }
+  .tape header button[hidden] { display: none; }
+  .tape ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .tape li + li { border-top: 1px solid var(--paper-line); }
+  .tape li button {
+    direction: ltr;
+    display: block;
+    width: 100%;
+    text-align: right;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    font: inherit;
+    padding: 10px 16px;
+    cursor: pointer;
+    font-variant-numeric: tabular-nums;
+  }
+  .tape li button:hover { background: var(--paper-line); }
+  .tape .q { display: block; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+  .tape .a { display: block; font-size: 20px; overflow-wrap: anywhere; }
+  .empty { color: var(--muted); font-size: 14px; padding: 18px 16px; line-height: 1.6; margin: 0; }
+  .hint { color: var(--muted); font-size: 13px; padding: 10px 16px 14px; margin: 0; border-top: 1px dashed var(--paper-line); line-height: 1.5; }
+
+  @media (max-width: 700px) {
+    .tape { max-width: 348px; max-height: 320px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .keys button, .value { transition: none; }
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <section class="calc" aria-label="מחשבון">
+    <div class="lcd" aria-live="polite">
+      <div class="expr" id="expr"></div>
+      <div class="value" id="value">0</div>
+    </div>
+    <div class="keys" id="keys">
+      <button class="fn" data-k="clear" aria-label="נקה הכול">AC</button>
+      <button class="fn" data-k="neg" aria-label="החלף סימן">±</button>
+      <button class="fn" data-k="pct" aria-label="אחוז">%</button>
+      <button class="op" data-k="÷" aria-label="חלקי">÷</button>
+      <button data-k="7">7</button>
+      <button data-k="8">8</button>
+      <button data-k="9">9</button>
+      <button class="op" data-k="×" aria-label="כפול">×</button>
+      <button data-k="4">4</button>
+      <button data-k="5">5</button>
+      <button data-k="6">6</button>
+      <button class="op" data-k="−" aria-label="פחות">−</button>
+      <button data-k="1">1</button>
+      <button data-k="2">2</button>
+      <button data-k="3">3</button>
+      <button class="op" data-k="+" aria-label="ועוד">+</button>
+      <button class="fn" data-k="back" aria-label="מחק ספרה">⌫</button>
+      <button data-k="0">0</button>
+      <button data-k="." aria-label="נקודה עשרונית">.</button>
+      <button class="eq" data-k="=" aria-label="שווה">=</button>
+    </div>
+  </section>
+
+  <aside class="tape" aria-label="היסטוריית חישובים">
+    <header>
+      <h2>היסטוריה</h2>
+      <button id="clearTape" hidden>נקה</button>
+    </header>
+    <ol id="tapeList"></ol>
+    <p class="empty" id="empty">החישובים שלך יופיעו כאן. לחיצה על תוצאה מחזירה אותה למחשבון.</p>
+    <p class="hint">אפשר להקליד גם מהמקלדת: ספרות, ‎+ − * /‎, Enter, Backspace ו־Esc.</p>
+  </aside>
+</main>
+
+<script>
+(function () {
+  const exprEl = document.getElementById('expr');
+  const valueEl = document.getElementById('value');
+  const keysEl = document.getElementById('keys');
+  const tapeList = document.getElementById('tapeList');
+  const emptyEl = document.getElementById('empty');
+  const clearTapeBtn = document.getElementById('clearTape');
+
+  const OPS = ['+', '−', '×', '÷'];
+  let tokens = [];      // completed numbers and operators
+  let cur = '0';        // number on screen
+  let entered = false;  // cur was typed/set since the last operator
+  let replace = true;   // next digit replaces cur
+  let done = false;     // last action was "="
+  let error = '';
+  let tape = [];
+
+  // ---------- storage (per-viewer convenience) ----------
+  try {
+    const saved = localStorage.getItem('calc-tape');
+    if (saved) tape = JSON.parse(saved) || [];
+  } catch (e) { tape = []; }
+  function saveTape() {
+    try { localStorage.setItem('calc-tape', JSON.stringify(tape.slice(0, 50))); } catch (e) {}
+  }
+
+  // ---------- formatting ----------
+  function groupInt(s) {
+    return s.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+  function formatTyped(s) {
+    const neg = s.startsWith('-');
+    const body = neg ? s.slice(1) : s;
+    const [i, f] = body.split('.');
+    return (neg ? '-' : '') + groupInt(i) + (f !== undefined ? '.' + f : '');
+  }
+  function toStr(n) {
+    if (!isFinite(n)) return 'NaN';
+    const r = parseFloat(n.toPrecision(12));
+    if (Math.abs(r) >= 1e15 || (Math.abs(r) < 1e-9 && r !== 0)) {
+      return r.toExponential(6).replace(/\.?0+e/, 'e');
+    }
+    return String(r);
+  }
+  function show(s) {
+    return s.includes('e') ? s : formatTyped(s);
+  }
+
+  // ---------- evaluation with precedence ----------
+  function evaluate(seq) {
+    const nums = [parseFloat(seq[0])];
+    const ops = [];
+    for (let i = 1; i < seq.length; i += 2) {
+      const op = seq[i], n = parseFloat(seq[i + 1]);
+      if (op === '×' || op === '÷') {
+        if (op === '÷' && n === 0) throw new Error('div0');
+        const last = nums.pop();
+        nums.push(op === '×' ? last * n : last / n);
+      } else {
+        ops.push(op);
+        nums.push(n);
+      }
+    }
+    let total = nums[0];
+    ops.forEach((op, i) => { total = op === '+' ? total + nums[i + 1] : total - nums[i + 1]; });
+    return total;
+  }
+
+  function exprText(seq) {
+    return seq.map(t => OPS.includes(t) ? ' ' + t + ' ' : show(t)).join('');
+  }
+
+  // ---------- render ----------
+  function render() {
+    if (error) {
+      exprEl.textContent = error;
+      exprEl.classList.add('err');
+      valueEl.textContent = '—';
+    } else {
+      exprEl.classList.remove('err');
+      if (!done) exprEl.textContent = exprText(tokens);
+      valueEl.textContent = show(cur);
+    }
+    const len = valueEl.textContent.length;
+    valueEl.style.fontSize = len > 14 ? '28px' : len > 11 ? '34px' : len > 8 ? '40px' : '48px';
+
+    const lastOp = !entered && tokens.length ? tokens[tokens.length - 1] : null;
+    keysEl.querySelectorAll('.op').forEach(b => b.classList.toggle('active', b.dataset.k === lastOp));
+  }
+
+  function renderTape() {
+    tapeList.innerHTML = '';
+    tape.forEach(item => {
+      const li = document.createElement('li');
+      const b = document.createElement('button');
+      b.setAttribute('aria-label', 'השתמש בתוצאה ' + item.a);
+      const q = document.createElement('span'); q.className = 'q'; q.textContent = item.q + ' =';
+      const a = document.createElement('span'); a.className = 'a'; a.textContent = show(item.a);
+      b.append(q, a);
+      b.addEventListener('click', () => useValue(item.a));
+      li.appendChild(b);
+      tapeList.appendChild(li);
+    });
+    emptyEl.hidden = tape.length > 0;
+    clearTapeBtn.hidden = tape.length === 0;
+  }
+
+  // ---------- actions ----------
+  function resetAll() {
+    tokens = []; cur = '0'; entered = false; replace = true; done = false; error = '';
+  }
+  function startFresh() {
+    if (done || error) { resetAll(); }
+  }
+
+  function digit(d) {
+    startFresh();
+    if (replace) { cur = d; replace = false; }
+    else {
+      if (cur.replace(/[-.]/g, '').length >= 15) return;
+      cur = (cur === '0') ? d : (cur === '-0' ? '-' + d : cur + d);
+    }
+    entered = true;
+  }
+  function dot() {
+    startFresh();
+    if (replace) { cur = '0.'; replace = false; }
+    else if (!cur.includes('.') && !cur.includes('e')) cur += '.';
+    entered = true;
+  }
+  function operator(o) {
+    if (error) resetAll();
+    if (done) { tokens = []; done = false; entered = true; }
+    if (!entered && tokens.length) tokens[tokens.length - 1] = o;
+    else tokens.push(cur, o);
+    entered = false; replace = true;
+  }
+  function equals() {
+    if (done || error || tokens.length === 0) return;
+    const seq = [...tokens, cur];
+    const q = exprText(seq);
+    try {
+      const r = toStr(evaluate(seq));
+      if (r === 'NaN') throw new Error('nan');
+      exprEl.textContent = q + ' =';
+      cur = r;
+      tape.unshift({ q, a: r });
+      tape = tape.slice(0, 50);
+      saveTape(); renderTape();
+    } catch (e) {
+      error = e.message === 'div0' ? 'אי אפשר לחלק באפס' : 'החישוב לא תקין';
+    }
+    tokens = []; done = true; entered = true; replace = true;
+  }
+  function percent() {
+    if (error) return;
+    if (done) { done = false; tokens = []; }
+    cur = toStr(parseFloat(cur) / 100);
+    entered = true; replace = true;
+  }
+  function negate() {
+    if (error) return;
+    if (done) { done = false; tokens = []; }
+    if (cur === '0') return;
+    cur = cur.startsWith('-') ? cur.slice(1) : '-' + cur;
+    entered = true;
+  }
+  function back() {
+    if (error) { resetAll(); return; }
+    if (done || replace) return;
+    cur = cur.slice(0, -1);
+    if (cur === '' || cur === '-') { cur = '0'; replace = true; }
+  }
+  function useValue(v) {
+    if (error || done) resetAll();
+    cur = v; entered = true; replace = true;
+    render();
+  }
+
+  function press(k) {
+    if (/^\d$/.test(k)) digit(k);
+    else if (k === '.') dot();
+    else if (OPS.includes(k)) operator(k);
+    else if (k === '=') equals();
+    else if (k === 'clear') resetAll();
+    else if (k === 'pct') percent();
+    else if (k === 'neg') negate();
+    else if (k === 'back') back();
+    render();
+  }
+
+  keysEl.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (b) press(b.dataset.k);
+  });
+
+  const keyMap = { '+': '+', '-': '−', '*': '×', 'x': '×', '/': '÷', '=': '=', 'Enter': '=',
+    'Backspace': 'back', 'Escape': 'clear', 'Delete': 'clear', '%': 'pct', '.': '.', ',': '.' };
+  document.addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    let k = /^\d$/.test(e.key) ? e.key : keyMap[e.key];
+    if (!k) return;
+    if (e.key === 'Enter' && document.activeElement && document.activeElement.closest('.tape')) return;
+    e.preventDefault();
+    press(k);
+    const btn = keysEl.querySelector('[data-k="' + k + '"]');
+    if (btn) { btn.classList.add('pressed'); setTimeout(() => btn.classList.remove('pressed'), 100); }
+  });
+
+  clearTapeBtn.addEventListener('click', () => { tape = []; saveTape(); renderTape(); });
+
+  render();
+  renderTape();
+})();
+</script>
+</body>
+</html>
