@@ -162,6 +162,13 @@
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
+  .green-btn {
+    display: block; width: 100%; margin-top: 12px; padding: 14px;
+    border: 0; border-radius: 14px; cursor: pointer;
+    background: #2E9E5B; color: #fff; font: inherit; font-size: 18px; font-weight: 500;
+  }
+  .green-btn:hover { filter: brightness(1.08); }
+  .green-btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
   .keys button.op { background: var(--op); color: var(--op-ink); font-size: 26px; }
   .keys button.fn { background: var(--op); color: var(--op-ink); font-size: 19px; font-weight: 500; }
   .keys button.eq { background: var(--eq); color: var(--eq-ink); font-size: 28px; font-weight: 500; }
@@ -265,6 +272,7 @@
       <button data-k="." aria-label="נקודה עשרונית">.</button>
       <button class="eq" data-k="=" aria-label="שווה">=</button>
     </div>
+    <button type="button" class="green-btn">כפתור ירוק</button>
   </section>
 
   <aside class="tape" aria-label="היסטוריית חישובים">
