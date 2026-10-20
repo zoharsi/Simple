@@ -164,6 +164,7 @@
   }
   .keys button.op { background: var(--op); color: var(--op-ink); font-size: 26px; }
   .keys button.fn { background: var(--op); color: var(--op-ink); font-size: 19px; font-weight: 500; }
+  .keys button.wide { grid-column: 1 / -1; aspect-ratio: auto; height: 52px; border-radius: 26px; font-size: 24px; }
   .keys button.eq { background: var(--eq); color: var(--eq-ink); font-size: 28px; font-weight: 500; }
   .keys button.op.active { outline: 3px solid var(--eq); outline-offset: -3px; }
   .keys button:active, .keys button.pressed { transform: translateY(2px); box-shadow: 0 0 0 rgba(0,0,0,0); filter: brightness(.94); }
@@ -244,6 +245,7 @@
       <div class="value" id="value">0</div>
     </div>
     <div class="keys" id="keys">
+      <button class="fn wide" data-k="sqrt" aria-label="שורש ריבועי">√</button>
       <button class="fn" data-k="clear" aria-label="נקה הכול">AC</button>
       <button class="fn" data-k="neg" aria-label="החלף סימן">±</button>
       <button class="fn" data-k="pct" aria-label="אחוז">%</button>
@@ -439,6 +441,14 @@
     cur = toStr(parseFloat(cur) / 100);
     entered = true; replace = true;
   }
+  function sqrt() {
+    if (error) return;
+    if (done) { done = false; tokens = []; }
+    const n = parseFloat(cur);
+    if (n < 0) { error = 'אי אפשר לחשב שורש למספר שלילי'; return; }
+    cur = toStr(Math.sqrt(n));
+    entered = true; replace = true;
+  }
   function negate() {
     if (error) return;
     if (done) { done = false; tokens = []; }
@@ -466,6 +476,7 @@
     else if (k === 'clear') resetAll();
     else if (k === 'pct') percent();
     else if (k === 'neg') negate();
+    else if (k === 'sqrt') sqrt();
     else if (k === 'back') back();
     render();
   }
